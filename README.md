@@ -1,2 +1,0 @@
-# FreeRTOScpp
-FreeRTOS C++ Wrappers
