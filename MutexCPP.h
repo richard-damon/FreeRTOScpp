@@ -31,6 +31,7 @@
  * improvements made be shared, preferably to the author.
  * @endparblock
  * 
+ * @ingroup FreeRTOSCpp
  */
 
 #ifndef MUTEXCPP_H
@@ -39,32 +40,59 @@
 #include "FreeRTOS.h"
 #include "semphr.h"
 
+/**
+ * @brief Mutex Wrapper.
+ *
+ * @ingroup FreeRTOSCpp
+ */
+
 class Mutex {
-	public:
-		Mutex(char const* name) {
-			handle = xSemaphoreCreateMutex();
-	#if configQUEUE_REGISTRY_SIZE > 0
-			vQueueAddToRegistry(handle, name);
-	#endif
-		}
-		~Mutex() {
-			vSemaphoreDelete(handle);
-		}
+public:
+	/**
+	 * @brief Constructor.
+	 * @param name Name to give mutex, used for Debug Registry if setup
+	 */
+	Mutex(char const* name) {
+		handle = xSemaphoreCreateMutex();
+#if configQUEUE_REGISTRY_SIZE > 0
+		vQueueAddToRegistry(handle, name);
+#endif
+	}
+	/**
+	 * @brief Destructor.
+	 *
+	 * Deletes the semaphore.
+	 */
+	~Mutex() {
+		vSemaphoreDelete(handle);
+	}
 
-		bool take(TickType_t wait = portMAX_DELAY) {
-			return xSemaphoreTake(handle, wait);
+	bool take(TickType_t wait = portMAX_DELAY) {
+		return xSemaphoreTake(handle, wait);
+	}
 
-		}
-
-		bool give() {
-			return xSemaphoreGive(handle);
-		}
-	private:
-		SemaphoreHandle_t handle;
+	bool give() {
+		return xSemaphoreGive(handle);
+	}
+private:
+	SemaphoreHandle_t handle;
+#if __cplusplus < 201101L
+    Mutex(Mutex const&);      ///< We are not copyable.
+    void operator =(Mutex const&);  ///< We are not assignable.
+#else
+    Mutex(Mutex const&) = delete;      ///< We are not copyable.
+    void operator =(Mutex const&) = delete;  ///< We are not assignable.
+#endif // __cplusplus
 
 };
 
 #if configUSE_RECURSIVE_MUTEXES > 0
+/**
+ * @brief Recursive Mutex Wrapper.
+ *
+ * @ingroup FreeRTOSCpp
+ */
+
 class RecursiveMutex {
 public:
 	RecursiveMutex(char const* name) {
@@ -85,9 +113,17 @@ public:
 	bool give() {
 		return xSemaphoreGiveRecursive(handle);
 	}
+
 private:
 	SemaphoreHandle_t handle;
+#if __cplusplus < 201101L
+    RecursiveMutex(RecursiveMutex const&);      ///< We are not copyable.
+    void operator =(RecursiveMutex const&);  ///< We are not assignable.
+#else
+    RecursiveMutex(RecursiveMutex const&) = delete;      ///< We are not copyable.
+    void operator =(RecursiveMutex const&) = delete;  ///< We are not assignable.
+#endif // __cplusplus
 };
-#endif
+#endif // configUSE_RECURSIVE_MUTEXES
 
-#endif /* MUTEXCPP_H_ */
+#endif // MUTEXCPP_H

@@ -31,41 +31,77 @@
  * improvements made be shared, preferably to the author.
  * @endparblock
  * 
+ * @todo Add Counting Semaphores (Perhaps rename Semaphore to BinarySemaphore)
+ * @ingroup FreeRTOSCpp
  */
 #ifndef SEMAPHORE_CPP_H
 #define SEMAPHORE_CPP_H
 
 #include "FreeRTOS.h"
 #include "semphr.h"
+
+/**
+ * @brief Binary Semaphore Wrapper.
+ *
+ * @ingroup FreeRTOSCpp 
+ */
+
 class Semaphore {
 public:
+  /**
+   * @brief Constructor.
+   * @param name Name to give semaphore, used for Debug Registry if setup
+   */
   Semaphore(char const* name) {
-    vSemaphoreCreateBinary(sema);
+	sema = xSemaphoreCreateBinary();
 #if configQUEUE_REGISTRY_SIZE > 0
-    vQueueAddToRegistry(sema, name);
+	if(name)
+	  vQueueAddToRegistry(sema, name);
 #endif
   }
-
+  /**
+   * @brief Destructor.
+   *
+   * Delete the semaphore.
+   */
   ~Semaphore() {
     vQueueDelete(sema);
   }
-
+  /**
+   * @brief Give the Semaphore.
+   */
   signed portBASE_TYPE give() {
     return xSemaphoreGive(sema);
   }
+
+  /**
+   * @brief Take the semaphore.
+   *
+   * @param delay The number of ticks to wait for the semaphore
+   */
   signed portBASE_TYPE  take(TickType_t delay = portMAX_DELAY){
     return xSemaphoreTake(sema, delay);
   }
 
-  void start_ISR(portBASE_TYPE& flag) {
-    waswoken = &flag;
-  }
-  signed portBASE_TYPE  give_ISR() {
-    return xSemaphoreGiveFromISR(sema, waswoken);
+  /**
+   * @brief Give the Semaphore inside an ISR
+   *
+   * @param waswoken The flag variable used to indicate if we need to run the 
+   * scheduler when we exit the ISR.
+   */
+  signed portBASE_TYPE  give_ISR(portBASE_TYPE& waswoken) {
+    return xSemaphoreGiveFromISR(sema, &waswoken);
   }
 private:
-  xSemaphoreHandle sema;
-  portBASE_TYPE* waswoken;
+  SemaphoreHandle_t sema;
+
+#if __cplusplus < 201101L
+    Semaphore(Semaphore const&);      ///< We are not copyable.
+    void operator =(Semaphore const&);  ///< We are not assignable.
+#else
+    Semaphore(Semaphore const&) = delete;      ///< We are not copyable.
+    void operator =(Semaphore const&) = delete;  ///< We are not assignable.
+#endif // __cplusplus
 
 };
 #endif
