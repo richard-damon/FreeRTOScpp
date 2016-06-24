@@ -165,8 +165,8 @@ public:
 
 #endif
 
-private:
   TaskHandle_t handle;  ///< Handle for the task we are managing.
+private:
 #if __cplusplus < 201101L
     Task(Task const&);      ///< We are not copyable.
     void operator =(Task const&);  ///< We are not assignable.
@@ -220,7 +220,7 @@ private:
 	static_cast<TaskClass *>(parm) -> task();
 	// If we get here, task has returned, delete ourselves or block indefinitely.
 #if INCLUDE_vTaskDelete
-	handle = 0;
+	static_cast<TaskClass *>(parm)->handle = 0;
     vTaskDelete(0); // Delete ourselves
 #else
     while(1)
