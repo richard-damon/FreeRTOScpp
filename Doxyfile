@@ -2054,7 +2054,9 @@ PREDEFINED             = INCLUDE_vTaskDelete=1 \
                          INCLUDE_vTaskPriorityGet=1 \
                          INCLUDE_vTaskPrioritySet=1 \
                          INCLUDE_vTaskSuspend=1 \
-                         INCLUDE_vTaskResumeFromISR=1
+                         INCLUDE_vTaskResumeFromISR=1 \
+                         configUSE_RECURSIVE_MUTEXES=1 \
+                         configQUEUE_REGISTRY_SIZE=1
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
