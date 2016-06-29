@@ -43,7 +43,29 @@
 /**
  * @brief Mutex Wrapper.
  *
+ * A Mutex is a basic synchronization primitive allowing mutual exclusion to be
+ * handled which also implements priority inheritance. Note, the basic mutex is 
+ * NOT recursive, ie if a Task has taken the Mutex, it must not try to take it 
+ * again before giving it. If you need this, use a RecurviseMutex. 
+ *
+ * The usage of a Mutex is similar to a semaphore, but the task that takes the
+ * Mutex is also supposed to be the Task that eventually gives it back. It also
+ * doesn't normally make sense for an ISR to use a Mutex, so no _ISR routines 
+ * have been made available.
+ *
+ * Example Usage:
+ * @code
+ * RecursiveMutex mutex("MyMutex");
+ *
+ * // In some other task
+ * mutex.take();
+ * ... // some code that needs mutual exclusion
+ * mutex.give();
+ * @endcode
+ *
  * @ingroup FreeRTOSCpp
+ * @todo should we make a 'Lock' object that takes/gives the mutex?
+ * @todo Support static allocation added in FreeRTOS V9.
  */
 
 class Mutex {
@@ -90,7 +112,34 @@ private:
 /**
  * @brief Recursive Mutex Wrapper.
  *
+ * A RecursiveMutex adds the ability to nest takes, so that if you have taken the 
+ * RecursiveMutex and take it again, this works and requires you to give the 
+ * RecursiveMutex back as many times as it was taken before it is released.
+ *
+ * One very common application for this is for messages to the user on a console.
+ * Generally, you don't want pieces of a message interrupted by pieces of other 
+ * messages, so message output routines use a mutex on the console port.
+ * These routines often use lower level routines that also want to make sure their
+ * output isn't interspersed, so each level takes the RecursiveMutex at their start
+ * and releases it at the end. Being a RecursiveMutex this works.
+ *
+ * Example Usage:
+ * @code
+ * RecursiveMutex mutex("MyMutex");
+ *
+ * // In some other task
+ * mutex.take();
+ * ...
+ *  // possible in a recursive call or call to lower level routine.
+ *  mutex.take();
+ *  ...
+ *  mutex.give();
+ * ... 
+ * mutex.give();
+ *
+ * @endcode
  * @ingroup FreeRTOSCpp
+ * @todo Support static allocation added in FreeRTOS V9.
  */
 
 class RecursiveMutex {

@@ -43,6 +43,27 @@
 /**
  * @brief Binary Semaphore Wrapper.
  *
+ * Example Usage:
+ * @code
+ * Semaphore sema("MySema");
+ *
+ * // In some task
+ * sema.give();
+ *
+ * // In some other task
+ * sema.take();
+ *
+ * // In some ISR
+ *
+ * portBASE_TYPE woken = 0;
+ * ...
+ * sema.give_ISR(woken);
+ * ...
+ * portYIELD_FROM_ISR(woken);
+ * return;
+ *
+ * @endcode
+ * @todo Support static allocation added in FreeRTOS V9.
  * @ingroup FreeRTOSCpp 
  */
 

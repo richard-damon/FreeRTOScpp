@@ -57,6 +57,7 @@
  * | TaskPrio_High         | 0 | 1 | 2 | 3 | 3 | 4 | N-2 | Urgent, Short Deadlines, not much processing       |
  * | TaskPrio_Highest      | 0 | 1 | 2 | 3 | 4 | 5 | N-1 | Critical, do NOW, must be quick (Used by FreeRTOS) |
  *
+ * 
  * @ingroup FreeRTOSCpp 
  */
 enum TaskPriority {
@@ -70,28 +71,54 @@ enum TaskPriority {
 
 /**
  * @brief Lowest Level Wrapper.
+ *
  * Create the specified task with a provided task function.
  *
  * If the Task object is destroyed, the class will be deleted (if deletion has been enabled)
+ *
+ * Note, many of the member functions of Task are available conditionally 
+ * based on the corresponding options being turned on in FreeRTOSConfig.h
+ *
+ * Example Usage:
+ * @code
+ * void taskfun(void *parm) {
+ *     while(1) {
+ *         vTaskDelay(1);
+ *     }
+ * }
+ *
+ * Task taskTCB("Task", taskfun, TaskPrio_Low, configMINIMAL_STACK_SIZE);
+ * @endcode
+ *
+ * Note, I, personally, create virtually all of my tasks with a global/file scope
+ * object. I try to set up my systems to not be creating and destroying tasks as the
+ * system runs.
+ *
+ * One warning, do NOT create tasks as local (automatic) variables in main(),
+ * as FreeRTOS in some ports reuses the stack from main as the interrupt stack 
+ * when the scheduler starts.
+ *
  * @ingroup FreeRTOSCpp
  * @todo Look at adding member functions for task manipulation
+ * @todo Look at adding TaskNotify operations
+ * @todo Support static allocation added in FreeRTOS V9.
+ *
  */
-
 class Task {
 public:
-	/**
-	 * @brief Constructor.
-	 *
-	 * @param name The name of the task.
-	 * @param taskfun The function implementing the task, should have type void (*taskfun)(void *)
-	 * @param priority The priority of the task. Use the TaskPriority enum values or a related value converted to a TaskPriority
-	 * @param stackDepth Size of the stack to give to the task
-	 * @param parm the parameter passed to taskFun. Defaults to NULL.
-	 *
-	 * Upon construction the task will be created.
-	 *
-	 * @todo Look at adding TaskNotify operations
-	 */
+  /**
+   * @brief Constructor.
+   *
+   * @param name The name of the task.
+   * @param taskfun The function implementing the task, should have type void (*taskfun)(void *)
+   * @param priority The priority of the task. Use the TaskPriority enum values or a related value converted to a TaskPriority
+   * @param stackDepth Size of the stack to give to the task
+   * @param parm the parameter passed to taskFun. Defaults to NULL.
+   *
+   * Upon construction the task will be created. See the FreeRTOS function
+   * xTaskCreate() for more details on the parameters
+   *
+   */
   Task(char const*name, void (*taskfun)(void *), TaskPriority priority,
        unsigned portSHORT stackDepth, void * parm = 0) {
     xTaskCreate(taskfun, name, stackDepth, parm, priority, &handle);
@@ -103,9 +130,9 @@ public:
    */
   virtual ~Task() {
 #if INCLUDE_vTaskDelete
-	if(handle){
-	    vTaskDelete(handle);
-	}
+    if(handle){
+      vTaskDelete(handle);
+    }
 #endif
     return;
   }
@@ -160,11 +187,12 @@ public:
    * Only available if INCLUDE_vTaskSuspend == 1 and INCLUDE_vTaskResumeFromISR == 1
    * @returns True if ISR should request a context switch.
    */
-  bool resume_ISR() { return xTaskResumeFromISR(handle);
+  bool resume_ISR() { return xTaskResumeFromISR(handle); }
 # endif
 
 #endif
 
+protected:
   TaskHandle_t handle;  ///< Handle for the task we are managing.
 private:
 #if __cplusplus < 201101L
@@ -182,21 +210,43 @@ private:
  * Derive from TaskClass and the 'task()' member function will get called as the task based on the class.
  *
  * If task() returns the task will be deleted if deletion has been enabled.
+ *
+ * Example Usage:
+ * @code
+ *
+ * class MyClass : public TaskClass {
+ * public:
+ *   MyClass() :
+ *     TaskClass("MyClass", TaskPrio_Low, configMINIMAL_STACK_SIZE) // Note, these parameters could come from parameters of the constructor
+ *     {
+ *     }
+ *
+ *   virtual void task() {
+ *     // Do something
+ *   }
+ * };
+ *
+ * MyClass myclass; // Create object (and tas)
+ * @endcode
  * @ingroup FreeRTOSCpp
  */
 class TaskClass : public Task {
 public:
-	/**
-	 * @brief Constructor
-	 *
-	 * @param name The name of the task.
-	 * @param priority The priority of the task. Use the TaskPriority enum values or a related value converted to a TaskPriority
-	 * @param stackDepth Size of the stack to give to the task
-	 *
-	 * Note: At construction time the task will be created, so if the the scheduler has been started, the created task needs to
-	 * have a priority less than the creating task so it can't start until after the class deriving from TaskClass has finished
-	 * it constructor (or other measures need to have been taken to make sure this happens, like stopping the scheduler).
-	 */
+  /**
+   * @brief Constructor
+   *
+   * @param name The name of the task.
+   * @param priority The priority of the task. Use the TaskPriority enum values or a related value converted to a TaskPriority
+   * @param stackDepth Size of the stack to give to the task
+   *
+   * Note: At construction time the task will be created, so if the the scheduler has been started, the created task needs to
+   * have a priority less than the creating task so it can't start until after the class deriving from TaskClass has finished
+   * it constructor (or other measures need to have been taken to make sure this happens, like stopping the scheduler).
+   *
+   * Also, class based tasks don't get a void* parameter, instead they have the object
+   * of which they are a member.
+   *
+   */
   TaskClass(char const*name,TaskPriority priority,
            unsigned portSHORT stackDepth) :
     Task(name, &taskfun, priority, stackDepth, this)
@@ -204,7 +254,7 @@ public:
   }
   /**
    * @brief task function.
-   * The member function task needs to
+   * The Class derived from TaskClass implements it task function as the task() member function.
    */
   virtual void task() = 0;
 
@@ -212,15 +262,15 @@ private:
   /**
    * Trampoline for task.
    *
-   * @todo Note, is a static function so normally compatible by calling convention 
+   * @todo Note, this is a static function so normally compatible by calling convention 
    * with an ordinary C function, like FreeRTOS expects. For maximum portablity
    * we can change this to a free function declared as extern "C"
    */
   static void taskfun(void* parm) {
-	static_cast<TaskClass *>(parm) -> task();
-	// If we get here, task has returned, delete ourselves or block indefinitely.
+    static_cast<TaskClass *>(parm) -> task();
+    // If we get here, task has returned, delete ourselves or block indefinitely.
 #if INCLUDE_vTaskDelete
-	static_cast<TaskClass *>(parm)->handle = 0;
+    static_cast<TaskClass *>(parm)->handle = 0;
     vTaskDelete(0); // Delete ourselves
 #else
     while(1)

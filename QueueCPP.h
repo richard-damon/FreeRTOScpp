@@ -51,8 +51,26 @@
  * Note also, this type needs to be trivially copyable, and preferably a POD 
  * as the FreeRTOS queue code will copy it with memcpy().
  *
+ * Example Usage:
+ * @code
+ * struct MyType {
+ * ...  // Note, MyType should be a POD (Plain Ol Data) type.
+ *      // or at minimum a type that can be memcpy'ed (as it will be).
+ * };
+ *
+ * Queue<MyType> queue(5, "MyQueue");
+ * ...
+ * MyType var1;
+ * queue.add(var1);
+ * ...
+ * MyType var2;
+ * queue.pop(var1);
+ * @endcode
+ *
+ * 
  * @todo add Overwrite operation
  * @todo add QueueSet Functionality
+ * @todo Support static allocation added in FreeRTOS V9.
  * @ingroup FreeRTOSCpp
  */
 
