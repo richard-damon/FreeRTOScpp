@@ -173,6 +173,7 @@ private:
     void operator =(RecursiveMutex const&) = delete;  ///< We are not assignable.
 #endif // __cplusplus
 };
+
 #endif // configUSE_RECURSIVE_MUTEXES
 
 #endif // MUTEXCPP_H
