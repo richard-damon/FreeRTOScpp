@@ -11,7 +11,7 @@
 # Include the Doxygen configuration from another file.
 # The file must be a relative path with respect to the root of the repository.
 
-DOXYFILE =
+DOXYFILE = Doxyfile
 
 # Specify external repository to link documentation with.
 # This is similar to Doxygen's TAGFILES option, but will automatically link to
