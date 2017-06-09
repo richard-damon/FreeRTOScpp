@@ -170,7 +170,7 @@ public:
    * @return True if Queue is Full.
    */
   bool full() {
-    return 0 < uxQueueSpacesAvailable(handle);
+    return 0 == uxQueueSpacesAvailable(handle);
   }
 
   /**
