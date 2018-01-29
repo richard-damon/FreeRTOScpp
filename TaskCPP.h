@@ -45,7 +45,7 @@
  * @brief Names for Base set of Priorities.
  *
  * Assigns used based names to priority levels, optimized for configMAX_PRIORITIES = 6 for maximal distinctions
- * with reasonable colapsing for smaller values. If configMAX_PRIORITIES is >6 then some values won't have names here, but
+ * with reasonable collapsing for smaller values. If configMAX_PRIORITIES is >6 then some values won't have names here, but
  * values could be created and cast to the enum type.
  *
  * | configMAX_PRIORITIES: | 1 | 2 | 3 | 4 | 5 | 6 | N>6 | Use                                                |
@@ -57,7 +57,6 @@
  * | TaskPrio_High         | 0 | 1 | 2 | 3 | 3 | 4 | N-2 | Urgent, Short Deadlines, not much processing       |
  * | TaskPrio_Highest      | 0 | 1 | 2 | 3 | 4 | 5 | N-1 | Critical, do NOW, must be quick (Used by FreeRTOS) |
  *
- * 
  * @ingroup FreeRTOSCpp 
  */
 enum TaskPriority {
@@ -71,212 +70,292 @@ enum TaskPriority {
 
 /**
  * @brief Lowest Level Wrapper.
- *
  * Create the specified task with a provided task function.
  *
- * If the Task object is destroyed, the class will be deleted (if deletion has been enabled)
- *
- * Note, many of the member functions of Task are available conditionally 
- * based on the corresponding options being turned on in FreeRTOSConfig.h
- *
- * Example Usage:
- * @code
- * void taskfun(void *parm) {
- *     while(1) {
- *         vTaskDelay(1);
- *     }
- * }
- *
- * Task taskTCB("Task", taskfun, TaskPrio_Low, configMINIMAL_STACK_SIZE);
- * @endcode
- *
- * Note, I, personally, create virtually all of my tasks with a global/file scope
- * object. I try to set up my systems to not be creating and destroying tasks as the
- * system runs.
- *
- * One warning, do NOT create tasks as local (automatic) variables in main(),
- * as FreeRTOS in some ports reuses the stack from main as the interrupt stack 
- * when the scheduler starts.
- *
+ * If the TaskBase object is destroyed, the FreeRTOS Task will be deleted (if deletion has been enabled)
  * @ingroup FreeRTOSCpp
- * @todo Look at adding member functions for task manipulation
- * @todo Look at adding TaskNotify operations
- * @todo Support static allocation added in FreeRTOS V9.
+ * @todo Fully implemwent task manipulation functions
+
  *
  */
-class Task {
-public:
-  /**
-   * @brief Constructor.
-   *
-   * @param name The name of the task.
-   * @param taskfun The function implementing the task, should have type void (*taskfun)(void *)
-   * @param priority The priority of the task. Use the TaskPriority enum values or a related value converted to a TaskPriority
-   * @param stackDepth Size of the stack to give to the task
-   * @param parm the parameter passed to taskFun. Defaults to NULL.
-   *
-   * Upon construction the task will be created. See the FreeRTOS function
-   * xTaskCreate() for more details on the parameters
-   *
-   */
-  Task(char const*name, void (*taskfun)(void *), TaskPriority priority,
-       unsigned portSHORT stackDepth, void * parm = 0) {
-    xTaskCreate(taskfun, name, stackDepth, parm, priority, &handle);
-  }
-  /**
-   * @brief Destructor.
-   *
-   * If deletion is enabled, delete the task.
-   */
-  virtual ~Task() {
-#if INCLUDE_vTaskDelete
-    if(handle){
-      vTaskDelete(handle);
-    }
-#endif
-    return;
-  }
 
-  /**
-   * @brief Get Task Handle.
-   * @return the task handle.
-   */
-  TaskHandle_t getHandle() const { return handle; }
-
-#if INCLUDE_vTaskPriorityGet
-  /**
-   * @brief Get Task priority
-   *
-   * Only available if INCLUDE_vTaskPriorityGet == 1
-   * @return The priority of the Task.
-   */
-  TaskPriority priority() const { return static_cast<TaskPriority>(uxTaskPriorityGet(handle); }
-#endif
-
-#if INCLUDE_vTaskPrioritySet
-  /**
-   * @brief Set Task priority
-   *
-   * Only available if INCLUDE_vTaskPrioritySet == 1
-   * @param priority The TaskPriority to give the Task.
-   */
-  void priority(TaskPriority priority) { vTaskPrioritySet(handle, priority); }
-#endif
-
-#if INCLUDE_vTaskSuspend
-  /**
-   * @brief Suspend the Task.
-   *
-   * Only available if INCLUDE_vTaskSuspend == 1
-   */
-  void suspend() { vTaskSuspend(handle); }
-
-  /**
-   * @brief Resume the Task.
-   *
-   * Only available if INCLUDE_vTaskSuspend == 1
-   */
-  void resume() { vTaskResume(handle); }
-
-# if INCLUDE_vTaskResumeFromISR
-  /**
-   * @brief Resume task from ISR.
-   *
-   * Note: Only functions with _ISR should be used inside Interupt service routines.
-   *
-   * Only available if INCLUDE_vTaskSuspend == 1 and INCLUDE_vTaskResumeFromISR == 1
-   * @returns True if ISR should request a context switch.
-   */
-  bool resume_ISR() { return xTaskResumeFromISR(handle); }
-# endif
-
-#endif
-
+class TaskBase {
 protected:
-  TaskHandle_t handle;  ///< Handle for the task we are managing.
-private:
+	/**
+	 * @brief Constructor
+	 *
+	 * TaskBase is effectively Abstract, so a sub class is needed to create to Task.
+	 */
+	TaskBase() : handle(0) {
+
+	}
+
+public:
+	  /**
+	   * @brief Destructor.
+	   *
+	   * If deletion is enabled, delete the task.
+	   */
+	  virtual ~TaskBase() {
+#if INCLUDE_vTaskDelete
+		if(handle){
+		    vTaskDelete(handle);
+		}
+#endif
+	    return;
+	  }
+	  /**
+	   * @brief Get Task Handle.
+	   * @return the task handle.
+	   */
+	  TaskHandle_t getHandle() const { return handle; }
+
+	#if INCLUDE_uxTaskPriorityGet
+	  /**
+	   * @brief Get Task priority
+	   *
+	   * Only available if INCLUDE_vTaskPriorityGet == 1
+	   * @return The priority of the Task.
+	   */
+	  TaskPriority priority() const { return static_cast<TaskPriority>(uxTaskPriorityGet(handle)); }
+	#endif
+
+	#if INCLUDE_vTaskPrioritySet
+	  /**
+	   * @brief Set Task priority
+	   *
+	   * Only available if INCLUDE_vTaskPrioritySet == 1
+	   * @param priority_ The TaskPriority to give the Task.
+	   */
+	  void priority(TaskPriority priority_) { vTaskPrioritySet(handle, priority_); }
+	#endif
+
+	#if INCLUDE_vTaskSuspend
+	  /**
+	   * @brief Suspend the Task.
+	   *
+	   * Only available if INCLUDE_vTaskSuspend == 1
+	   */
+	  void suspend() { vTaskSuspend(handle); }
+
+	  /**
+	   * @brief Resume the Task.
+	   *
+	   * Only available if INCLUDE_vTaskSuspend == 1
+	   */
+	  void resume() { vTaskResume(handle); }
+	# endif
+
+#if INCLUDE_xTaskAbortDelay
+	  /**
+	   * @brief Abort Delay
+	   *
+	   * Only available if INCLUDE_xTaskAbortDelay == 1
+	   */
+	  void abortDelay() { xTaskAbortDelay(handle); }
+
+#endif
+	# if INCLUDE_xTaskResumeFromISR
+	  /**
+	   * @brief Resume task from ISR.
+	   *
+	   * Note: Only functions with _ISR should be used inside Interupt service routines.
+	   *
+	   * Only available if INCLUDE_vTaskSuspend == 1 and INCLUDE_vTaskResumeFromISR == 1
+	   * @returns True if ISR should request a context switch.
+	   */
+	  bool resume_ISR() { return xTaskResumeFromISR(handle); }
+	#endif
+
+	  bool notify(uint32_t value, eNotifyAction act) { return xTaskNotify(handle, value, act); }
+	  bool notify_ISR(uint32_t value, eNotifyAction act, portBASE_TYPE& waswoken)
+	  	  { return xTaskNotifyFromISR(handle, value, act, &waswoken);}
+	  bool notify_query(uint32_t value, eNotifyAction act, uint32_t &old)
+	  	  {return xTaskNotifyAndQuery(handle, value, act, &old); }
+	  bool notify_query_ISR(uint32_t value, eNotifyAction act, uint32_t &old, portBASE_TYPE& waswoken)
+	  	  {return xTaskNotifyAndQueryFromISR(handle, value, act, &old, &waswoken); }
+	  bool give() { return xTaskNotifyGive(handle); }
+	  void give_ISR(portBASE_TYPE& waswoken) { vTaskNotifyGiveFromISR(handle, &waswoken); }
+	protected:
+	  TaskHandle_t handle;  ///< Handle for the task we are managing.
+	private:
 #if __cplusplus < 201101L
-    Task(Task const&);      ///< We are not copyable.
-    void operator =(Task const&);  ///< We are not assignable.
+	    TaskBase(TaskBase const&);      ///< We are not copyable.
+	    void operator =(TaskBase const&);  ///< We are not assignable.
 #else
-    Task(Task const&) = delete;      ///< We are not copyable.
-    void operator =(Task const&) = delete;  ///< We are not assignable.
+	    TaskBase(TaskBase const&) = delete;      ///< We are not copyable.
+	    void operator =(TaskBase const&) = delete;  ///< We are not assignable.
 #endif // __cplusplus
 
 };
 
 /**
+ * @brief Statically Created Task Wrapper.
+ * Create the specified task with a provided task function.
+ *
+ * @tparam stackDepth Size of the stack to give to the task
+ *
+ * If the Task object is destroyed, the class will be deleted (if deletion has been enabled)
+ * @ingroup FreeRTOSCpp
+ */
+
+template<uint32_t stackDepth
+#if( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
+    =0
+#endif
+    > class TaskS : public TaskBase {
+public:
+	/**
+	 * @brief Constructor.
+	 *
+	 * @param name The name of the task.
+	 * @param taskfun The function implementing the task, should have type void (*taskfun)(void *)
+	 * @param priority_ The priority of the task. Use the TaskPriority enum values or a related value converted to a TaskPriority
+	 * @param myParm the parameter passed to taskFun. Defaults to NULL.
+	 *
+	 * Upon construction the task will be created.
+	 *
+	 */
+  TaskS(char const*name, void (*taskfun)(void *), TaskPriority priority_, void * myParm = 0) {
+	    handle = xTaskCreateStatic(taskfun, name, stackDepth, myParm, priority_, stack, &tcb);
+  }
+
+protected:
+  // used by TaskClassS to avoid needing too much complications
+  TaskS(char const*name, void (*taskfun)(void *), TaskPriority priority_, unsigned portSHORT stackSize_,
+		void * myParm) {
+	  (void) stackSize_;
+	  handle = xTaskCreateStatic(taskfun, name, stackDepth, myParm, priority_, stack, &tcb);
+  }
+
+private:
+  StaticTask_t tcb;
+  StackType_t stack[stackDepth];
+};
+
+
+/**
+ * @brief Dynamically Created Task Wrapper
+ */
+#if( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
+
+template<> class TaskS<0> : public TaskBase {
+public:
+	/**
+	 * @brief Constructor.
+	 *
+	 * @param name The name of the task.
+	 * @param taskfun The function implementing the task, should have type void (*taskfun)(void *)
+	 * @param priority_ The priority of the task. Use the TaskPriority enum values or a related value converted to a TaskPriority
+	 * @param stackSize Size of the stack to give to the task
+	 * @param myParm the parameter passed to taskFun. Defaults to NULL.
+	 *
+	 * Upon construction the task will be created.
+	 *
+	 */
+  TaskS(char const*name, void (*taskfun)(void *), TaskPriority priority_,
+       unsigned portSHORT stackSize, void * myParm = 0) {
+	    xTaskCreate(taskfun, name, stackSize, myParm, priority_, &handle);
+  }
+};
+
+typedef TaskS<0> Task;
+#endif
+
+/**
  * @brief Make a class based task.
  * Derive from TaskClass and the 'task()' member function will get called as the task based on the class.
  *
+ * @tparam stackDepth Size of the stack to give to the task
+ *
  * If task() returns the task will be deleted if deletion has been enabled.
- *
- * Example Usage:
- * @code
- *
- * class MyClass : public TaskClass {
- * public:
- *   MyClass() :
- *     TaskClass("MyClass", TaskPrio_Low, configMINIMAL_STACK_SIZE) // Note, these parameters could come from parameters of the constructor
- *     {
- *     }
- *
- *   virtual void task() {
- *     // Do something
- *   }
- * };
- *
- * MyClass myclass; // Create object (and tas)
- * @endcode
  * @ingroup FreeRTOSCpp
  */
-class TaskClass : public Task {
+template<uint32_t stackDepth> class TaskClassS : public TaskS<stackDepth> {
 public:
-  /**
-   * @brief Constructor
-   *
-   * @param name The name of the task.
-   * @param priority The priority of the task. Use the TaskPriority enum values or a related value converted to a TaskPriority
-   * @param stackDepth Size of the stack to give to the task
-   *
-   * Note: At construction time the task will be created, so if the the scheduler has been started, the created task needs to
-   * have a priority less than the creating task so it can't start until after the class deriving from TaskClass has finished
-   * it constructor (or other measures need to have been taken to make sure this happens, like stopping the scheduler).
-   *
-   * Also, class based tasks don't get a void* parameter, instead they have the object
-   * of which they are a member.
-   *
-   */
-  TaskClass(char const*name,TaskPriority priority,
-           unsigned portSHORT stackDepth) :
-    Task(name, &taskfun, priority, stackDepth, this)
+	/**
+	 * @brief Constructor
+	 *
+	 * @param name The name of the task.
+	 * @param priority_ The priority of the task. Use the TaskPriority enum values or a related value converted to a TaskPriority
+	 * @param stackDepth_ How many words of stack to allocate to the task. Only used if the template parameter stackDepth is 0
+	 *
+	 * Note: At construction time the task will be created, so if the the scheduler has been started, the created task needs to
+	 * have a priority less than the creating task so it can't start until after the class deriving from TaskClass has finished
+	 * its constructor. If this is not true, the task will be created with a lower priority, and when it does get to run,
+	 * it will correct its priority. If the task creating the new task is of IDLE priority, and time-slicing is enabled
+	 * then there is a small chance that if a timer tick happens in the middle of creating the object, the system
+	 * will switch to the incomplete task, so this is not advised.
+	 * If INCLUDE_VTaskPrioritySet is not true, then this can't be done so the caller is responsible to enforce.
+	 *
+	 * This code is sort of ugly due to the conditional compilation. In words:
+	 * * If we don't have vTaskPrioritySet, just create the task as specified, and it is the users job to make it work.
+	 * * If we have vTaskPrioritySet but not uxTaskPriorityGet, tasks created when running start out at TaskPrio_Idle.
+	 * * If we have both vTaskPrioritySet and uxTaskPriorityGet, then if the task is to be created with a priority greater
+	 * than or equal to the creating task priority, then it will be created with a priority 1 less than the creating task
+	 * (but not less than TaskPrio_Idle)
+	 */
+  TaskClassS(char const*name, TaskPriority priority_, unsigned portSHORT stackDepth_=0) :
+    TaskS<stackDepth>(name, &taskfun,
+#if INCLUDE_vTaskPrioritySet
+    		((xTaskGetSchedulerState() == taskSCHEDULER_RUNNING)
+#if INCLUDE_uxTaskPriorityGet
+			&& (uxTaskPriorityGet(0) <= priority_)
+#endif
+			) ? (
+#if INCLUDE_uxTaskPriorityGet
+			(uxTaskPriorityGet(0) > TaskPrio_Idle ) ?	static_cast<TaskPriority>(uxTaskPriorityGet(0)-1) :
+#endif
+    		TaskPrio_Idle) :
+#endif
+			priority_,
+			stackDepth_, this)
+#if INCLUDE_vTaskPrioritySet
+	, myPriority(priority_)
+#endif
   {
   }
+
+  virtual ~TaskClassS() {}
+
   /**
    * @brief task function.
-   * The Class derived from TaskClass implements it task function as the task() member function.
+   * The member function task needs to
    */
   virtual void task() = 0;
 
-private:  
+private:
   /**
    * Trampoline for task.
    *
-   * @todo Note, this is a static function so normally compatible by calling convention 
+   * @todo Note, is a static function so normally compatible by calling convention
    * with an ordinary C function, like FreeRTOS expects. For maximum portablity
-   * we can change this to a free function declared as extern "C"
+   * we could change this to a free function declared as extern "C", but might need so
+   * tricks to excape out of template space.
    */
-  static void taskfun(void* parm) {
-    static_cast<TaskClass *>(parm) -> task();
-    // If we get here, task has returned, delete ourselves or block indefinitely.
+  static void taskfun(void* myParm) {
+	TaskClassS *myTask = static_cast<TaskClassS *>(myParm);
+#if INCLUDE_vTaskPrioritySet
+	myTask->priority(myTask->myPriority);
+#endif
+	myTask->task();
+	// If we get here, task has returned, delete ourselves or block indefinitely.
 #if INCLUDE_vTaskDelete
-    static_cast<TaskClass *>(parm)->handle = 0;
+	myTask->handle = 0;
     vTaskDelete(0); // Delete ourselves
 #else
     while(1)
       vTaskDelay(portMAX_DELAY);
 #endif
   }
+#if INCLUDE_vTaskPrioritySet
+  TaskPriority myPriority;
+#endif
 };
 
+
+#if( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
+typedef TaskClassS<0> TaskClass;
 #endif
+#endif
+

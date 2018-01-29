@@ -37,6 +37,7 @@
 #ifndef SEMAPHORE_CPP_H
 #define SEMAPHORE_CPP_H
 
+#include "Lock.h"
 #include "FreeRTOS.h"
 #include "semphr.h"
 
@@ -63,18 +64,21 @@
  * return;
  *
  * @endcode
- * @todo Support static allocation added in FreeRTOS V9.
  * @ingroup FreeRTOSCpp 
  */
 
-class Semaphore {
+class Semaphore  : public Lockable {
 public:
   /**
    * @brief Constructor.
    * @param name Name to give semaphore, used for Debug Registry if setup
    */
   Semaphore(char const* name) {
+#if( configSUPPORT_STATIC_ALLOCATION == 1 )
+	sema = xSemaphoreCreateBinaryStatic(&semaBuffer);
+#else
 	sema = xSemaphoreCreateBinary();
+#endif
 #if configQUEUE_REGISTRY_SIZE > 0
 	if(name)
 	  vQueueAddToRegistry(sema, name);
@@ -91,7 +95,7 @@ public:
   /**
    * @brief Give the Semaphore.
    */
-  signed portBASE_TYPE give() {
+  bool give() {
     return xSemaphoreGive(sema);
   }
 
@@ -100,7 +104,7 @@ public:
    *
    * @param delay The number of ticks to wait for the semaphore
    */
-  signed portBASE_TYPE  take(TickType_t delay = portMAX_DELAY){
+  bool take(TickType_t delay = portMAX_DELAY){
     return xSemaphoreTake(sema, delay);
   }
 
@@ -110,7 +114,7 @@ public:
    * @param waswoken The flag variable used to indicate if we need to run the 
    * scheduler when we exit the ISR.
    */
-  signed portBASE_TYPE  give_ISR(portBASE_TYPE& waswoken) {
+  bool give_ISR(portBASE_TYPE& waswoken) {
     return xSemaphoreGiveFromISR(sema, &waswoken);
   }
 private:
@@ -123,6 +127,10 @@ private:
     Semaphore(Semaphore const&) = delete;      ///< We are not copyable.
     void operator =(Semaphore const&) = delete;  ///< We are not assignable.
 #endif // __cplusplus
+
+#if( configSUPPORT_STATIC_ALLOCATION == 1 )
+    StaticSemaphore_t semaBuffer;
+#endif
 
 };
 #endif
