@@ -1,39 +1,35 @@
 /** ********************************************************************
  * @file   Lock.cpp
- * @author rdamon
- * @copyright Copyright (c) 2017. Optics 1, Inc. All Rights Reserved.
- * Permission to use, copy, modify, and distribute this software and
- * its documentation for any purpose, without fee and without a signed
- * licensing agreement, is hereby prohibited. Any unauthorized
- * reproduction or distribution of this software, or any portion of it,
- * may result in severe civil and criminal penalties, and will be
- * prosecuted to the maximum extent possible under the law.
- * \n\n
- * This document may contain technical data whose export is restricted by
- * the U.S. Department of State, under the Arms Export Control Act
- * (Title 22, U.S.C., Section 2751) and the International Traffic in Arms
- * Regulations (Title 22 CFR §120-130). Licenses approved by the Department of
- * State are required for the export (as defined in ITAR 22 CFR §120.17) of
- * such technical data to any foreign person or organization (as defined in
- * ITAR 22 CFR §120.16) either in the United States or abroad. Further
- * distribution of any technical data contained in this document, without the
- * prior written approval of the Department of State, is a violation of these
- * export laws and could subject the offender to severe criminal penalties.
- * Reference TA-7603-10A
- * \n\n
- * Use, duplication, or disclosure of this sheet is subject to the restrictions
- * above.
- * \n\n
- * Paper copies of this document are not controlled and are for reference only.
- * All references to this document shall be taken from the electronic &
- * controlled format
- * OPTICS1 Proprietary Information
+ * @copyright (c) 2017-2018 Richard Damon
+ * @author Richard Damon <richard.damon@gmail.com>
+ * @parblock
+ * MIT License:
  *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * It is requested (but not required by license) that any bugs found or
+ * improvements made be shared, preferably to the author.
  * @date Jun 6, 2017 Created
  *
  *  Description:
  * @brief
- *
+ * @ingroup FreeRTOSCpp
  **********************************************************************/
 #include <Lock.h>
 #include "IOLib/log.h"

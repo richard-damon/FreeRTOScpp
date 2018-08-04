@@ -44,6 +44,7 @@
  * @brief Base Queue Wrapper
  *
  * This Base Class provides the Type Independent functionality for a Queue
+ * @ingroup FreeRTOSCpp
  */
 
 class QueueBase {
@@ -148,6 +149,7 @@ private:
  * @brief Typed Queue Wrapper
  *
  * This Base Class provides the Type Dependent functionality for a Queue
+ * @ingroup FreeRTOSCpp
  */
 
 template<class T> class QueueTypeBase : public QueueBase {

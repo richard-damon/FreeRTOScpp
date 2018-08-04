@@ -32,8 +32,6 @@
  * @endparblock
  *
  * @ingroup FreeRTOSCpp
- * 
- * @defgroup FreeRTOSCpp Free RTOS C++ Wrapper 
  */
 #ifndef TaskCPP_H
 #define TaskCPP_H
@@ -75,8 +73,8 @@ enum TaskPriority {
  * If the TaskBase object is destroyed, the FreeRTOS Task will be deleted (if deletion has been enabled)
  * @ingroup FreeRTOSCpp
  * @todo Fully implemwent task manipulation functions
-
  *
+ * @ingroup FreeRTOSCpp
  */
 
 class TaskBase {

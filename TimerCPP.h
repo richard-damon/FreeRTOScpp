@@ -41,6 +41,9 @@
 #include "FreeRTOS.h"
 #include "timers.h"
 
+/**
+ * @ingroup FreeRTOSCpp
+ */
 class Timer {
 public:
 	Timer(char const* name_, void(*func)(TimerHandle_t handle), TickType_t period_, bool reload, bool start_) :
@@ -92,6 +95,9 @@ private:
 	}
 };
 
+/**
+ * @ingroup FreeRTOSCpp
+ */
 template <class T> class TimerMember : public TimerClass {
 public:
 	TimerMember(char const* name_, T* obj_, void (T::*func_)(), TickType_t period_, UBaseType_t reload) :
@@ -104,6 +110,5 @@ private:
 	T* obj;
 	void (T::*func)();
 };
-
 
 #endif /* FREERTOS_FREERTOSPP_TIMERCPP_H_ */
