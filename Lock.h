@@ -29,7 +29,10 @@
  * @date Jun 6, 2017 Created
  *
  *  Description:
- * @brief
+ * @brief Lock Wrapper
+ *
+ *  Wrapper classes for Basic Lock Functionality for FreeRTOS.
+ *
  * @ingroup FreeRTOSCpp
  **********************************************************************/
 #ifndef FREERTOS_FREERTOSPP_LOCK_H_

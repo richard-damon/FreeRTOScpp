@@ -1,24 +1,20 @@
 /**
  * @file SemaphoreCPP.h
- * @brief FreeRTOS Semaphore Wrapper
- *
- * This file contains a set of lightweight wrappers for semaphores using FreeRTOS
- * 
  * @copyright (c) 2007-2015 Richard Damon
  * @author Richard Damon <richard.damon@gmail.com>
  * @parblock
  * MIT License:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,10 +23,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * It is requested (but not required by license) that any bugs found or 
+ * It is requested (but not required by license) that any bugs found or
  * improvements made be shared, preferably to the author.
  * @endparblock
- * 
+ *
+ * @brief FreeRTOS Semaphore Wrapper
+ *
+ * This file contains a set of lightweight wrappers for semaphores using FreeRTOS
+ *
  * @todo Add Counting Semaphores (Perhaps rename Semaphore to BinarySemaphore)
  * @ingroup FreeRTOSCpp
  */
@@ -64,7 +64,7 @@
  * return;
  *
  * @endcode
- * @ingroup FreeRTOSCpp 
+ * @ingroup FreeRTOSCpp
  */
 
 class Semaphore  : public Lockable {
@@ -111,7 +111,7 @@ public:
   /**
    * @brief Give the Semaphore inside an ISR
    *
-   * @param waswoken The flag variable used to indicate if we need to run the 
+   * @param waswoken The flag variable used to indicate if we need to run the
    * scheduler when we exit the ISR.
    */
   bool give_ISR(portBASE_TYPE& waswoken) {

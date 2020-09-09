@@ -1,24 +1,20 @@
 /**
  * @file QueueCPP.h
- * @brief FreeRTOS Queue Wrapper
- *
- * This file contains a set of lightweight wrappers for queues using FreeRTOS
- * 
  * @copyright (c) 2007-2015 Richard Damon
  * @author Richard Damon <richard.damon@gmail.com>
  * @parblock
  * MIT License:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,10 +23,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * It is requested (but not required by license) that any bugs found or 
+ * It is requested (but not required by license) that any bugs found or
  * improvements made be shared, preferably to the author.
  * @endparblock
- * 
+ *
+ * @brief FreeRTOS Queue Wrapper
+ *
+ * This file contains a set of lightweight wrappers for queues using FreeRTOS
+ *
  * @ingroup FreeRTOSCpp
  */
 #ifndef QUEUECPP_H
@@ -53,15 +53,15 @@ protected:
 	 * @brief Constructor
 	 *
 	 * Effectively Abstract class so protected base.
-	 * @param handle_ The handle for the queue/
+	 * @param handle_ The queueHandle for the queue/
 	 */
-	QueueBase(QueueHandle_t handle_) : handle(handle_) {};
+	QueueBase(QueueHandle_t handle_) : queueHandle(handle_) {};
 public:
 	  /**
 	   * @brief Destructor.
 	   */
 	virtual ~QueueBase() {
-	    vQueueDelete(handle);
+	    vQueueDelete(queueHandle);
 	  }
 
 	  /**
@@ -69,7 +69,7 @@ public:
 	   * @return The number of item in the Queue.
 	   */
 	  unsigned waiting() const {
-	    return uxQueueMessagesWaiting(handle);
+	    return uxQueueMessagesWaiting(queueHandle);
 	  }
 
 	  /**
@@ -77,7 +77,7 @@ public:
 	   * @return the number of spaces available in the Queue.
 	   */
 	  unsigned available() const {
-		  return uxQueueSpacesAvailable(handle);
+		  return uxQueueSpacesAvailable(queueHandle);
 	  }
 
 	  /**
@@ -85,7 +85,7 @@ public:
 	   * Resets the Queue to an empty state.
 	   */
 	  void reset() {
-		  xQueueReset(handle);
+		  xQueueReset(queueHandle);
 	  }
 
 	  /**
@@ -93,7 +93,7 @@ public:
 	   * @return True if Queue is Full.
 	   */
 	  bool full() {
-	    return 0 == uxQueueSpacesAvailable(handle);
+	    return 0 == uxQueueSpacesAvailable(queueHandle);
 	  }
 
 	  /**
@@ -101,7 +101,7 @@ public:
 	   * @return True if Queue is Empty.
 	   */
 	  bool empty() {
-	    return uxQueueMessagesWaiting(handle) == 0;
+	    return uxQueueMessagesWaiting(queueHandle) == 0;
 	  }
 
 	  /**
@@ -110,7 +110,7 @@ public:
 	   * @return True if Queue is Full.
 	   */
 	  bool full_ISR() {
-	    return xQueueIsQueueFullFromISR(handle);
+	    return xQueueIsQueueFullFromISR(queueHandle);
 	  }
 
 	  /**
@@ -119,7 +119,7 @@ public:
 	   * @return True if Queue is Empty.
 	   */
 	  bool empty_ISR() {
-	    return xQueueIsQueueEmptyFromISR(handle);
+	    return xQueueIsQueueEmptyFromISR(queueHandle);
 	  }
 
 	  /**
@@ -128,11 +128,11 @@ public:
 	   * @return The number of messages waiting.
 	   */
 	  unsigned waiting_ISR() {
-	    return uxQueueMessagesWaitingFromISR(handle);
+	    return uxQueueMessagesWaitingFromISR(queueHandle);
 	  }
 
 protected:
-	QueueHandle_t handle;
+	QueueHandle_t queueHandle;
 private:
 
 #if __cplusplus < 201101L
@@ -165,7 +165,7 @@ public:
 	   * @return True if successful
 	   */
 	bool push(T const& item, TickType_t time = portMAX_DELAY){
-	    return xQueueSendToFront(handle, &item, time);
+	    return xQueueSendToFront(queueHandle, &item, time);
 	}
 
 	  /**
@@ -176,7 +176,7 @@ public:
 	   * @return True if successful
 	   */
 	  bool add(T const& item, TickType_t time = portMAX_DELAY){
-	    return xQueueSendToBack(handle, &item, time);
+	    return xQueueSendToBack(queueHandle, &item, time);
 	  }
 
 	  /**
@@ -187,7 +187,7 @@ public:
 	   * @return True if an item returned.
 	   */
 	  bool pop(T& var, TickType_t time = portMAX_DELAY) {
-	    return xQueueReceive(handle, &var, time);
+	    return xQueueReceive(queueHandle, &var, time);
 	  }
 
 	  /**
@@ -198,7 +198,7 @@ public:
 	   * @return True if an item returned.
 	   */
 	  bool peek(T& var, TickType_t time = 0) {
-	    return xQueuePeek(handle, &var, time);
+	    return xQueuePeek(queueHandle, &var, time);
 	  }
 
 	  /**
@@ -211,7 +211,7 @@ public:
 	   * @return True if successful
 	   */
 	  bool push_ISR(T const& item, portBASE_TYPE& waswoken){
-	    return xQueueSendToFrontFromISR(handle, &item, &waswoken);
+	    return xQueueSendToFrontFromISR(queueHandle, &item, &waswoken);
 	  }
 
 	  /**
@@ -224,7 +224,7 @@ public:
 	   * @return True if successful
 	   */
 	  bool add_ISR(T const& item, portBASE_TYPE& waswoken){
-	    return xQueueSendToBackFromISR(handle, &item, &waswoken);
+	    return xQueueSendToBackFromISR(queueHandle, &item, &waswoken);
 	  }
 
 	  /**
@@ -237,7 +237,7 @@ public:
 	   * @return True if an item returned.
 	   */
 	  bool pop_ISR(T& var, portBASE_TYPE& waswoken) {
-	    return xQueueReceiveFromISR(handle, &var, &waswoken);
+	    return xQueueReceiveFromISR(queueHandle, &var, &waswoken);
 	  }
 
 	  /**
@@ -250,18 +250,18 @@ public:
 	   * @return True if an item returned.
 	   */
 	  bool peek_ISR(T& var, portBASE_TYPE& waswoken) {
-	    return xQueuePeekFromISR(handle, &var);
+	    return xQueuePeekFromISR(queueHandle, &var);
 	  }
 };
 
 /**
  * @brief Queue Wrapper.
  *
- * Note, is a template on the type of object to place on the queue, 
+ * Note, is a template on the type of object to place on the queue,
  * which makes the Queue more typesafe.
  *
  * @tparam T The type of object to be placed on the queue.
- * Note also, this type needs to be trivially copyable, and preferably a POD 
+ * Note also, this type needs to be trivially copyable, and preferably a POD
  * as the FreeRTOS queue code will copy it with memcpy().
  * @tparam queuelength The number of elements to reserve space for in the queue.
  * If 0 (which is the default value) then length will be provided to the constructor dynamically.
@@ -294,7 +294,7 @@ public:
 	{
 #if configQUEUE_REGISTRY_SIZE > 0
     if(name)
-      vQueueAddToRegistry(this->handle, name);
+      vQueueAddToRegistry(this->queueHandle, name);
 #endif
 
   };
@@ -320,7 +320,7 @@ public:
     {
 #if configQUEUE_REGISTRY_SIZE > 0
         if(name)
-            vQueueAddToRegistry(this->handle, name);
+            vQueueAddToRegistry(this->queueHandle, name);
 #endif
 
     };

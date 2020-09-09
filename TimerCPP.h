@@ -1,9 +1,5 @@
 /**
  * @file TimerCPP.h
- * @brief FreeRTOS Timer Wrapper
- *
- * This file contains a set of lightweight wrappers for tasks using FreeRTOS
- *
  * @copyright (c) 2016 Richard Damon
  * @author Richard Damon <richard.damon@gmail.com>
  * @parblock
@@ -31,6 +27,10 @@
  * improvements made be shared, preferably to the author.
  * @endparblock
  *
+ * @brief FreeRTOS Timer Wrapper
+ *
+ * This file contains a set of lightweight wrappers for tasks using FreeRTOS
+ *
  * @ingroup FreeRTOSCpp
  *
  */
@@ -47,7 +47,7 @@
 class Timer {
 public:
 	Timer(char const* name_, void(*func)(TimerHandle_t handle), TickType_t period_, bool reload, bool start_) :
-	handle(
+	timerHandle(
 #if( configSUPPORT_STATIC_ALLOCATION == 1 )
 		xTimerCreateStatic(name_, period_, reload, this, func, &timerBuffer)
 #else
@@ -57,23 +57,23 @@ public:
 	{
 		if(start_) start();
 	}
-	virtual ~Timer() {xTimerDelete(handle, portMAX_DELAY); }
+	virtual ~Timer() {xTimerDelete(timerHandle, portMAX_DELAY); }
 
-	bool 		active() { return xTimerIsTimerActive(handle); }
-	TickType_t	expiryTime() { return xTimerGetExpiryTime(handle); }
-	const char* name() { return pcTimerGetName(handle); }
-	TickType_t  period() { return xTimerGetPeriod(handle); }
-	bool		period(TickType_t period_, TickType_t wait = portMAX_DELAY) { return xTimerChangePeriod(handle, period_, wait);}
-	bool		periodISR(TickType_t period_, portBASE_TYPE& waswoken) {return xTimerChangePeriodFromISR(handle, period_, &waswoken); }
-	bool		reset(TickType_t wait = portMAX_DELAY) { return xTimerReset(handle, wait); }
-	bool		resetISR(portBASE_TYPE& waswoken) { return xTimerResetFromISR(handle, &waswoken); }
-	bool		start(TickType_t wait = portMAX_DELAY) { return xTimerStart(handle, wait); }
-	bool		startISR(portBASE_TYPE& waswoken) { return xTimerStartFromISR(handle, &waswoken); }
-	bool		stop(TickType_t wait = portMAX_DELAY) { return xTimerStop(handle, wait); }
-	bool		stopISR(portBASE_TYPE& waswoken) { return xTimerStopFromISR(handle, &waswoken); }
+	bool 		active() { return xTimerIsTimerActive(timerHandle); }
+	TickType_t	expiryTime() { return xTimerGetExpiryTime(timerHandle); }
+	const char* name() { return pcTimerGetName(timerHandle); }
+	TickType_t  period() { return xTimerGetPeriod(timerHandle); }
+	bool		period(TickType_t period_, TickType_t wait = portMAX_DELAY) { configASSERT(period_ > 0); return xTimerChangePeriod(timerHandle, period_, wait);}
+	bool		periodISR(TickType_t period_, portBASE_TYPE& waswoken) { configASSERT(period_ > 0); return xTimerChangePeriodFromISR(timerHandle, period_, &waswoken); }
+	bool		reset(TickType_t wait = portMAX_DELAY) { return xTimerReset(timerHandle, wait); }
+	bool		resetISR(portBASE_TYPE& waswoken) { return xTimerResetFromISR(timerHandle, &waswoken); }
+	bool		start(TickType_t wait = portMAX_DELAY) { return xTimerStart(timerHandle, wait); }
+	bool		startISR(portBASE_TYPE& waswoken) { return xTimerStartFromISR(timerHandle, &waswoken); }
+	bool		stop(TickType_t wait = portMAX_DELAY) { return xTimerStop(timerHandle, wait); }
+	bool		stopISR(portBASE_TYPE& waswoken) { return xTimerStopFromISR(timerHandle, &waswoken); }
 
 protected:
-	TimerHandle_t handle;
+	TimerHandle_t timerHandle;
 
 private:
 #if( configSUPPORT_STATIC_ALLOCATION == 1 )
@@ -89,8 +89,8 @@ public:
 
 	virtual void timer() = 0;	// Function called on timer activation
 private:
-	static void timerClassCallback(TimerHandle_t handle) {
-		TimerClass* me = static_cast<TimerClass*>(pvTimerGetTimerID(handle));
+	static void timerClassCallback(TimerHandle_t timerHandle) {
+		TimerClass* me = static_cast<TimerClass*>(pvTimerGetTimerID(timerHandle));
 		me->timer();
 	}
 };
@@ -105,7 +105,7 @@ public:
 		obj(obj_),
 		func(func_)
 	{}
-	virtual void timer() { obj->func();}
+	virtual void timer() { (obj->*func)();}
 private:
 	T* obj;
 	void (T::*func)();

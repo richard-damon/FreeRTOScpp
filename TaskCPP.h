@@ -1,24 +1,20 @@
 /**
  * @file TaskCPP.h
- * @brief FreeRTOS Task Wrapper
- *
- * This file contains a set of lightweight wrappers for tasks using FreeRTOS
- * 
  * @copyright (c) 2007-2015 Richard Damon
  * @author Richard Damon <richard.damon@gmail.com>
  * @parblock
  * MIT License:
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,9 +23,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * It is requested (but not required by license) that any bugs found or 
+ * It is requested (but not required by license) that any bugs found or
  * improvements made be shared, preferably to the author.
  * @endparblock
+ *
+ * @brief FreeRTOS Task Wrapper
+ *
+ * This file contains a set of lightweight wrappers for tasks using FreeRTOS
  *
  * @ingroup FreeRTOSCpp
  */
@@ -55,7 +55,7 @@
  * | TaskPrio_High         | 0 | 1 | 2 | 3 | 3 | 4 | N-2 | Urgent, Short Deadlines, not much processing       |
  * | TaskPrio_Highest      | 0 | 1 | 2 | 3 | 4 | 5 | N-1 | Critical, do NOW, must be quick (Used by FreeRTOS) |
  *
- * @ingroup FreeRTOSCpp 
+ * @ingroup FreeRTOSCpp
  */
 enum TaskPriority {
 	TaskPrio_Idle = 0,													///< Non-Real Time operations. tasks that don't block
@@ -72,7 +72,7 @@ enum TaskPriority {
  *
  * If the TaskBase object is destroyed, the FreeRTOS Task will be deleted (if deletion has been enabled)
  * @ingroup FreeRTOSCpp
- * @todo Fully implemwent task manipulation functions
+ * @todo Fully implement task manipulation functions
  *
  * @ingroup FreeRTOSCpp
  */
@@ -84,7 +84,7 @@ protected:
 	 *
 	 * TaskBase is effectively Abstract, so a sub class is needed to create to Task.
 	 */
-	TaskBase() : handle(0) {
+	TaskBase() : taskHandle(0) {
 
 	}
 
@@ -96,8 +96,8 @@ public:
 	   */
 	  virtual ~TaskBase() {
 #if INCLUDE_vTaskDelete
-		if(handle){
-		    vTaskDelete(handle);
+		if(taskHandle){
+		    vTaskDelete(taskHandle);
 		}
 #endif
 	    return;
@@ -106,7 +106,7 @@ public:
 	   * @brief Get Task Handle.
 	   * @return the task handle.
 	   */
-	  TaskHandle_t getHandle() const { return handle; }
+	  TaskHandle_t getTaskHandle() const { return taskHandle; }
 
 	#if INCLUDE_uxTaskPriorityGet
 	  /**
@@ -115,7 +115,7 @@ public:
 	   * Only available if INCLUDE_vTaskPriorityGet == 1
 	   * @return The priority of the Task.
 	   */
-	  TaskPriority priority() const { return static_cast<TaskPriority>(uxTaskPriorityGet(handle)); }
+	  TaskPriority priority() const { return static_cast<TaskPriority>(uxTaskPriorityGet(taskHandle)); }
 	#endif
 
 	#if INCLUDE_vTaskPrioritySet
@@ -125,7 +125,7 @@ public:
 	   * Only available if INCLUDE_vTaskPrioritySet == 1
 	   * @param priority_ The TaskPriority to give the Task.
 	   */
-	  void priority(TaskPriority priority_) { vTaskPrioritySet(handle, priority_); }
+	  void priority(TaskPriority priority_) { vTaskPrioritySet(taskHandle, priority_); }
 	#endif
 
 	#if INCLUDE_vTaskSuspend
@@ -134,14 +134,14 @@ public:
 	   *
 	   * Only available if INCLUDE_vTaskSuspend == 1
 	   */
-	  void suspend() { vTaskSuspend(handle); }
+	  void suspend() { vTaskSuspend(taskHandle); }
 
 	  /**
 	   * @brief Resume the Task.
 	   *
 	   * Only available if INCLUDE_vTaskSuspend == 1
 	   */
-	  void resume() { vTaskResume(handle); }
+	  void resume() { vTaskResume(taskHandle); }
 	# endif
 
 #if INCLUDE_xTaskAbortDelay
@@ -150,7 +150,7 @@ public:
 	   *
 	   * Only available if INCLUDE_xTaskAbortDelay == 1
 	   */
-	  void abortDelay() { xTaskAbortDelay(handle); }
+	  void abortDelay() { xTaskAbortDelay(taskHandle); }
 
 #endif
 	# if INCLUDE_xTaskResumeFromISR
@@ -162,20 +162,56 @@ public:
 	   * Only available if INCLUDE_vTaskSuspend == 1 and INCLUDE_vTaskResumeFromISR == 1
 	   * @returns True if ISR should request a context switch.
 	   */
-	  bool resume_ISR() { return xTaskResumeFromISR(handle); }
+	  bool resume_ISR() { return xTaskResumeFromISR(taskHandle); }
 	#endif
 
-	  bool notify(uint32_t value, eNotifyAction act) { return xTaskNotify(handle, value, act); }
-	  bool notify_ISR(uint32_t value, eNotifyAction act, portBASE_TYPE& waswoken)
-	  	  { return xTaskNotifyFromISR(handle, value, act, &waswoken);}
-	  bool notify_query(uint32_t value, eNotifyAction act, uint32_t &old)
-	  	  {return xTaskNotifyAndQuery(handle, value, act, &old); }
-	  bool notify_query_ISR(uint32_t value, eNotifyAction act, uint32_t &old, portBASE_TYPE& waswoken)
-	  	  {return xTaskNotifyAndQueryFromISR(handle, value, act, &old, &waswoken); }
-	  bool give() { return xTaskNotifyGive(handle); }
-	  void give_ISR(portBASE_TYPE& waswoken) { vTaskNotifyGiveFromISR(handle, &waswoken); }
+	  /**
+	   * @brief Notify a Task.
+	   *
+	   * Generic Task Notification operation
+	   */
+	  bool 			notify(uint32_t value, eNotifyAction act)
+	  	  	  	  	  	  { return xTaskNotify(taskHandle, value, act); }
+	  bool 			notify_ISR(uint32_t value, eNotifyAction act, portBASE_TYPE& waswoken)
+	  	  	  	  	  	  { return xTaskNotifyFromISR(taskHandle, value, act, &waswoken);}
+	  bool 			notify_query(uint32_t value, eNotifyAction act, uint32_t &old)
+	  	  	  	  	  	  {return xTaskNotifyAndQuery(taskHandle, value, act, &old); }
+	  bool 			notify_query_ISR(uint32_t value, eNotifyAction act, uint32_t &old, portBASE_TYPE& waswoken)
+	  	  	  	  	  	  {return xTaskNotifyAndQueryFromISR(taskHandle, value, act, &old, &waswoken); }
+	  /**
+	   * @brief Notify a Task as a semaphore
+	   *
+	   * Sends a notification to a task using a semaphore based protocol. Generally the task should we using
+	   * the take() function to receive the notification.
+	   */
+	  bool 			give() 		{ return xTaskNotifyGive(taskHandle); }
+	  void 			give_ISR(portBASE_TYPE& waswoken)
+	  	  	  	  	  	  { vTaskNotifyGiveFromISR(taskHandle, &waswoken); }
 	protected:
-	  TaskHandle_t handle;  ///< Handle for the task we are managing.
+	  // Protected as only the task itself should use these
+	  /**
+	   * @brief Wait for task notification.
+	   */
+	  uint32_t		wait(uint32_t clearEnter, uint32_t clearExit = 0xFFFFFFFF, uint32_t* value = 0, TickType_t ticks = portMAX_DELAY)
+	  	  	  	  	  	 { return xTaskNotifyWait(clearEnter, clearExit, value, ticks); }
+	  /**
+	   * @brief Wait for a task Give notification
+	   *
+	   * Specialized wait() designed to work with the give()/give_ISR() notifications.
+	   *
+	   * @param clear   Flag to indicate if the action on succesful take is to clear (True) or decrement (False) the notification value.
+	   * Effectively decides between a binary (True) or counting (False) semaphore behavior.
+	   *
+	   * @param ticks   The time to wait for the semaphore.
+	   *
+	   * @returns   Returns the notification word (prior to being adjusted for the take() ), Will be zero if
+	   * the take() timed out.
+	   */
+      uint32_t      take(bool clear = true, TickType_t ticks = portMAX_DELAY)
+                          { return ulTaskNotifyTake(clear, ticks); }
+
+
+	  TaskHandle_t taskHandle;  ///< Handle for the task we are managing.
 	private:
 #if __cplusplus < 201101L
 	    TaskBase(TaskBase const&);      ///< We are not copyable.
@@ -215,7 +251,7 @@ public:
 	 *
 	 */
   TaskS(char const*name, void (*taskfun)(void *), TaskPriority priority_, void * myParm = 0) {
-	    handle = xTaskCreateStatic(taskfun, name, stackDepth, myParm, priority_, stack, &tcb);
+	    taskHandle = xTaskCreateStatic(taskfun, name, stackDepth, myParm, priority_, stack, &tcb);
   }
 
 protected:
@@ -223,7 +259,7 @@ protected:
   TaskS(char const*name, void (*taskfun)(void *), TaskPriority priority_, unsigned portSHORT stackSize_,
 		void * myParm) {
 	  (void) stackSize_;
-	  handle = xTaskCreateStatic(taskfun, name, stackDepth, myParm, priority_, stack, &tcb);
+	  taskHandle = xTaskCreateStatic(taskfun, name, stackDepth, myParm, priority_, stack, &tcb);
   }
 
 private:
@@ -253,7 +289,7 @@ public:
 	 */
   TaskS(char const*name, void (*taskfun)(void *), TaskPriority priority_,
        unsigned portSHORT stackSize, void * myParm = 0) {
-	    xTaskCreate(taskfun, name, stackSize, myParm, priority_, &handle);
+	    xTaskCreate(taskfun, name, stackSize, myParm, priority_, &taskHandle);
   }
 };
 
@@ -327,9 +363,9 @@ private:
    * Trampoline for task.
    *
    * @todo Note, is a static function so normally compatible by calling convention
-   * with an ordinary C function, like FreeRTOS expects. For maximum portablity
+   * with an ordinary C function, like FreeRTOS expects. For maximum portability
    * we could change this to a free function declared as extern "C", but might need so
-   * tricks to excape out of template space.
+   * tricks to escape out of template space.
    */
   static void taskfun(void* myParm) {
 	TaskClassS *myTask = static_cast<TaskClassS *>(myParm);
@@ -339,7 +375,7 @@ private:
 	myTask->task();
 	// If we get here, task has returned, delete ourselves or block indefinitely.
 #if INCLUDE_vTaskDelete
-	myTask->handle = 0;
+	myTask->taskHandle = 0;
     vTaskDelete(0); // Delete ourselves
 #else
     while(1)

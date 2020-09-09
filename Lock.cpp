@@ -28,11 +28,14 @@
  * @date Jun 6, 2017 Created
  *
  *  Description:
- * @brief
+ * @brief FreeRTOS Lock Wrapper
+ *
+ *  Wrapper classes for Basic Lock Functionality for FreeRTOS.
+ *
  * @ingroup FreeRTOSCpp
  **********************************************************************/
 #include <Lock.h>
-#include "IOLib/log.h"
+
 
 Lock::Lock(Lockable& myLockable, bool mylocked, TickType_t wait) :
 lockable(myLockable),
