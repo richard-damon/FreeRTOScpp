@@ -38,6 +38,9 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#if INCLUDE_vTaskDelayUntil || INCLUDE_vTaskDelay
+#include <chrono>
+#endif
 
 /**
  * @brief Names for Base set of Priorities.
@@ -84,7 +87,11 @@ protected:
 	 *
 	 * TaskBase is effectively Abstract, so a sub class is needed to create to Task.
 	 */
-	TaskBase() : taskHandle(0) {
+	TaskBase() : taskHandle(0) 
+#if INCLUDE_vTaskDelayUntil
+    , xPreviousWakeTime(xTaskGetTickCount())
+#endif
+    {
 
 	}
 
@@ -210,6 +217,25 @@ public:
       uint32_t      take(bool clear = true, TickType_t ticks = portMAX_DELAY)
                           { return ulTaskNotifyTake(clear, ticks); }
 
+#if INCLUDE_vTaskDelay
+	  /**
+	   * @brief Delay for an amount of time
+	   * @param duration Duration for this task to delay
+	   *
+	   */
+      void 			delay(std::chrono::milliseconds duration)
+      					{ vTaskDelay(pdMS_TO_TICKS(duration.count())); }
+#endif
+
+#if INCLUDE_vTaskDelayUntil
+	  /**
+	   * @brief Delay until an amount of time has passed
+	   * @param nextWake Duration for this task to delay relative to the previous wake time
+	   *
+	   */
+      void 			delay_until(std::chrono::milliseconds nextWake)
+      					{ vTaskDelayUntil(&xPreviousWakeTime, pdMS_TO_TICKS(nextWake.count())); }
+#endif
 
 	  TaskHandle_t taskHandle;  ///< Handle for the task we are managing.
 	private:
@@ -221,6 +247,9 @@ public:
 	    void operator =(TaskBase const&) = delete;  ///< We are not assignable.
 #endif // __cplusplus
 
+#if INCLUDE_vTaskDelayUntil
+    TickType_t xPreviousWakeTime = 0;
+#endif
 };
 
 /**
