@@ -87,10 +87,7 @@ protected:
 	 *
 	 * TaskBase is effectively Abstract, so a sub class is needed to create to Task.
 	 */
-	TaskBase() : taskHandle(0) 
-#if INCLUDE_vTaskDelayUntil
-    , xPreviousWakeTime(xTaskGetTickCount())
-#endif
+	TaskBase() : taskHandle(0)
     {
 
 	}
@@ -217,26 +214,6 @@ public:
       uint32_t      take(bool clear = true, TickType_t ticks = portMAX_DELAY)
                           { return ulTaskNotifyTake(clear, ticks); }
 
-#if INCLUDE_vTaskDelay
-	  /**
-	   * @brief Delay for an amount of time
-	   * @param duration Duration for this task to delay
-	   *
-	   */
-      void 			delay(std::chrono::milliseconds duration)
-      					{ vTaskDelay(pdMS_TO_TICKS(duration.count())); }
-#endif
-
-#if INCLUDE_vTaskDelayUntil
-	  /**
-	   * @brief Delay until an amount of time has passed
-	   * @param nextWake Duration for this task to delay relative to the previous wake time
-	   *
-	   */
-      void 			delay_until(std::chrono::milliseconds nextWake)
-      					{ vTaskDelayUntil(&xPreviousWakeTime, pdMS_TO_TICKS(nextWake.count())); }
-#endif
-
 	  TaskHandle_t taskHandle;  ///< Handle for the task we are managing.
 	private:
 #if __cplusplus < 201101L
@@ -246,10 +223,6 @@ public:
 	    TaskBase(TaskBase const&) = delete;      ///< We are not copyable.
 	    void operator =(TaskBase const&) = delete;  ///< We are not assignable.
 #endif // __cplusplus
-
-#if INCLUDE_vTaskDelayUntil
-    TickType_t xPreviousWakeTime = 0;
-#endif
 };
 
 /**
@@ -419,6 +392,65 @@ private:
 
 #if( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
 typedef TaskClassS<0> TaskClass;
+#endif
+
+
+#if INCLUDE_vTaskDelay
+namespace TaskUtil
+{
+/**
+ * @brief Delay for an amount of time
+ * @param duration Duration for this task to delay
+ *
+ */
+inline void delay(std::chrono::milliseconds duration)
+{ 
+	vTaskDelay(pdMS_TO_TICKS(duration.count()));
+}
+
+/**
+ * @brief Delay for an amount of time
+ * @param duration Duration for this task to delay (in ticks)
+ *
+ */
+inline void delay(TickType_t ticks)
+{ 
+	vTaskDelay(ticks);
+}
+} // namespace Task
+#endif
+
+#if INCLUDE_vTaskDelayUntil
+namespace TaskUtil
+{
+/**
+ * @brief Delay until an amount of time has passed
+ * @param xPreviousWakeTime Time point to delay relative to
+ * @param nextWake Duration for this task to delay relative to the previous wake time
+ *
+ * Note: This function will attempt to initialize xPreviousWakeTime to the current
+ * 			tick count if it is 0
+ */
+inline void delay_until(TickType_t& xPreviousWakeTime, std::chrono::milliseconds nextWake)
+{ 
+	if (xPreviousWakeTime == 0) xPreviousWakeTime = xTaskGetTickCount();
+	vTaskDelayUntil(&xPreviousWakeTime, pdMS_TO_TICKS(nextWake.count()));
+}
+
+/**
+ * @brief Delay until an amount of time has passed
+ * @param xPreviousWakeTime Time point to delay relative to
+ * @param nextWake Duration for this task to delay relative to the previous wake time
+ *
+ * Note: This function will attempt to initialize xPreviousWakeTime to the current
+ * 			tick count if it is 0
+ */
+inline void delay_until(TickType_t& xPreviousWakeTime, const TickType_t nextWake)
+{ 
+	if (xPreviousWakeTime == 0) xPreviousWakeTime = xTaskGetTickCount();
+	vTaskDelayUntil(&xPreviousWakeTime, nextWake);
+}
+} // namespace Task
 #endif
 #endif
 
