@@ -1,8 +1,6 @@
 /**
- * @file Callback.cpp
- * @brief FreeRTOS Call back wrapper
- *
- * This file provides the C Trampoline function for the Callback Wrappers
+ * @file TaskCpp.cpp
+ * @brief FreeRTOS Task Wrapper
  *
  * @copyright (c) 2018-2024 Richard Damon
  * @author Richard Damon <richard.damon@gmail.com>
@@ -34,13 +32,28 @@
  * @ingroup FreeRTOSCpp
  */
 
-#include <CallBack.h>
 
+#include "TaskCpp.h"
+
+#if FREERTOSCPP_USE_NAMESPACE
 using namespace FreeRTOScpp;
+#endif
 
 extern "C" {
-	void voidCallbackU32(void* cb, uint32_t parm) {
-		CallBack<void, uint32_t>* callback = static_cast<CallBack<void, uint32_t>* >(cb);
-		callback->callback(parm);
-	}
-}
+
+/**
+ * Thunk for FreeRTOS to C++ Task Wrapper
+*/
+void taskcpp_task_thunk(void* parm) {
+    TaskClassBase *myClass = static_cast<TaskClassBase*>(parm);
+    if (myClass->wait_at_start) TaskBase::take();
+    myClass->task();
+#if INCLUDE_vTaskDelete
+    vTaskDelete(nullptr);
+#else
+    while(1) {
+        vTaskDelay(portMAX_DELAY);
+    }
+#endif
+}    
+} // extern "C"

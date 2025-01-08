@@ -1,20 +1,24 @@
 /**
  * @file QueueCPP.h
- * @copyright (c) 2007-2015 Richard Damon
+ * @brief FreeRTOS Queue Wrapper
+ *
+ * This file contains a set of lightweight wrappers for queues using FreeRTOS
+ * 
+ * @copyright (c) 2007-2024 Richard Damon
  * @author Richard Damon <richard.damon@gmail.com>
  * @parblock
  * MIT License:
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,21 +27,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * It is requested (but not required by license) that any bugs found or
+ * It is requested (but not required by license) that any bugs found or 
  * improvements made be shared, preferably to the author.
  * @endparblock
- *
- * @brief FreeRTOS Queue Wrapper
- *
- * This file contains a set of lightweight wrappers for queues using FreeRTOS
- *
+ * 
  * @ingroup FreeRTOSCpp
  */
 #ifndef QUEUECPP_H
 #define QUEUECPP_H
 
-#include "FreeRTOS.h"
+#include "FreeRTOScpp.h"
 #include "queue.h"
+
+#if FREERTOSCPP_USE_NAMESPACE
+namespace FreeRTOScpp {
+#endif
 
 //#include <type_traits>
 /**
@@ -167,7 +171,18 @@ public:
 	bool push(T const& item, TickType_t time = portMAX_DELAY){
 	    return xQueueSendToFront(queueHandle, &item, time);
 	}
-
+#if FREERTOSCPP_USE_CHRONO
+    /**
+     * @brief Push an item onto the Queue.
+     * Puts an item onto the Queue so it will be the next item to remove.
+     * @param item The item to put on the Queue.
+     * @param time How long to wait for room if Queue is full.
+     * @return True if successful
+     */
+  bool push(T const& item, Time_ms time){
+      return xQueueSendToFront(queueHandle, &item, ms2ticks(time));
+  }
+#endif
 	  /**
 	   * @brief add an item at end of the Queue.
 	   * Puts an item onto the Queue so it will be the last item to remove.
@@ -178,7 +193,18 @@ public:
 	  bool add(T const& item, TickType_t time = portMAX_DELAY){
 	    return xQueueSendToBack(queueHandle, &item, time);
 	  }
-
+#if FREERTOSCPP_USE_CHRONO
+      /**
+       * @brief add an item at end of the Queue.
+       * Puts an item onto the Queue so it will be the last item to remove.
+       * @param item The item to put on the Queue.
+       * @param time How long to wait for room if Queue is full.
+       * @return True if successful
+       */
+      bool add(T const& item, Time_ms time){
+        return xQueueSendToBack(queueHandle, &item, ms2ticks(time));
+      }
+#endif
 	  /**
 	   * @brief Get an item from the Queue.
 	   * Gets the first item from the Queue
@@ -189,6 +215,18 @@ public:
 	  bool pop(T& var, TickType_t time = portMAX_DELAY) {
 	    return xQueueReceive(queueHandle, &var, time);
 	  }
+#if FREERTOSCPP_USE_CHRONO
+      /**
+       * @brief Get an item from the Queue.
+       * Gets the first item from the Queue
+       * @param var Variable to place the item
+       * @param time How long to wait for an item to be available.
+       * @return True if an item returned.
+       */
+      bool pop(T& var, Time_ms time) {
+        return xQueueReceive(queueHandle, &var, ms2ticks(time));
+      }
+#endif
 
 	  /**
 	   * @brief Look at the first item in the Queue.
@@ -200,6 +238,18 @@ public:
 	  bool peek(T& var, TickType_t time = 0) {
 	    return xQueuePeek(queueHandle, &var, time);
 	  }
+#if FREERTOSCPP_USE_CHRONO
+      /**
+       * @brief Look at the first item in the Queue.
+       * Gets the first item from the Queue leaving it there.
+       * @param var Variable to place the item
+       * @param time How long to wait for an item to be available.
+       * @return True if an item returned.
+       */
+      bool peek(T& var, Time_ms time) {
+        return xQueuePeek(queueHandle, &var, ms2ticks(time));
+      }
+#endif
 
 	  /**
 	   * @brief Push an item onto the Queue.
@@ -257,11 +307,11 @@ public:
 /**
  * @brief Queue Wrapper.
  *
- * Note, is a template on the type of object to place on the queue,
+ * Note, is a template on the type of object to place on the queue, 
  * which makes the Queue more typesafe.
  *
  * @tparam T The type of object to be placed on the queue.
- * Note also, this type needs to be trivially copyable, and preferably a POD
+ * Note also, this type needs to be trivially copyable, and preferably a POD 
  * as the FreeRTOS queue code will copy it with memcpy().
  * @tparam queuelength The number of elements to reserve space for in the queue.
  * If 0 (which is the default value) then length will be provided to the constructor dynamically.
@@ -326,6 +376,10 @@ public:
     };
 
 };
+#endif
+
+#if FREERTOSCPP_USE_NAMESPACE
+}   // namespace FreeRTOScpp
 #endif
 
 #endif

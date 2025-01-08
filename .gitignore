@@ -1,3 +1,31 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Misc
 .DS_Store
-Docs/
 ._*
+doxygen_log.txt
+
+# Directories
+docs/
+.svn/
+.idea/

@@ -1,6 +1,10 @@
-/** ********************************************************************
- * @file   Lock.h
- * @copyright (c) 2017-2018 Richard Damon
+/**
+ * @file Lock.h
+ * @brief FreeRTOS Lock wrapper
+ *
+ * A Generic Locking interface for Lockable objects.
+ *
+ * @copyright (c) 2018-2024 Richard Damon
  * @author Richard Damon <richard.damon@gmail.com>
  * @parblock
  * MIT License:
@@ -25,23 +29,29 @@
  *
  * It is requested (but not required by license) that any bugs found or
  * improvements made be shared, preferably to the author.
- * *
- * @date Jun 6, 2017 Created
- *
- *  Description:
- * @brief Lock Wrapper
- *
- *  Wrapper classes for Basic Lock Functionality for FreeRTOS.
+ * @endparblock
  *
  * @ingroup FreeRTOSCpp
- **********************************************************************/
-#ifndef FREERTOS_FREERTOSPP_LOCK_H_
-#define FREERTOS_FREERTOSPP_LOCK_H_
+ */
 
-#include "FreeRTOS.h"
+#ifndef FREERTOSPP_LOCK_H_
+#define FREERTOSPP_LOCK_H_
+
+#include "FreeRTOScpp.h"
+
+#if FREERTOSCPP_USE_NAMESPACE
+namespace FreeRTOScpp {
+#endif
 
 /**
  * A Base class to provide block based locking capability.
+ *
+ * Any object that supports "Locking" should be derived from Lockable (like a Semaphore or Mutex)
+ *
+ * Such objects need to provide an interface consisting of
+ * + virtual bool take(TickType_t wait)
+ * + virtual bool give();
+ *
  * @ingroup FreeRTOSCpp
  */
 
@@ -51,6 +61,9 @@ public:
 	virtual ~Lockable() {}
 
 	virtual bool take(TickType_t wait = portMAX_DELAY) = 0;
+#if FREERTOSCPP_USE_CHRONO
+	        bool take(Time_ms ms) { return take(ms2ticks(ms)); }
+#endif
 	virtual bool give() = 0;
 private:
 #if __cplusplus < 201101L
@@ -64,27 +77,85 @@ private:
 
 /**
  * Class to hold a block based lock. (auto unlocks on in its destructor)
+ *
+ * Typical calling sequences:
+ *
+ * @code
+ *  // Somewhere global
+ *  Mutex mutex
+ * @endcode
+ * then, in a block
+ * @code
+ *  {
+ *      Lock lock(mutex); // Mutex is taken here
+ *  ...
+ *  } // and released here
+ * @endcode
+ *  or
+ *  @code
+ *
+ *  {
+ *      Lock lokc(mutex, false);     // don't take it yet
+ * ...
+ *      if (lock.lock(5)) {          // but take it here, with a maximum timeout
+ *         ...
+ *         lock.unlock();           // and possible release it
+ *      }
+ *
+ *  } // will be released here if taken and not released
+ * @endcode
+ * or
+ * @code
+ *  {
+ *      Lock lock(mute, 5);         // Try to take the semaphore with a timeout
+ *      if (lock.locked()) {
+ *                                  // Semaphore was locked, so we could use it
+ *      } else {
+ *                                  // Error handling because we couldn't take the semaphore.
+ *      }
+ *  } // Mutex will be released here if not otherwise release
+ * @endcode
+ *
  * @ingroup FreeRTOSCpp
  */
 class Lock {
 public:
-	Lock(Lockable& mylockable, bool locked = true, TickType_t wait = portMAX_DELAY);
+	Lock(Lockable& mylockable, bool mylocked = true, TickType_t wait = portMAX_DELAY);
+    /**
+     * Constructor with assumed locking by specifying lock time
+     * @param mylockable The Lockabe object to use
+     * @param wait The time it Ticks to wait to get the lock.
+     */
+	Lock(Lockable& mylockable, TickType_t wait) : Lock(mylockable, true, wait) {}
+#if FREERTOSCPP_USE_CHRONO
+    Lock(Lockable& mylockable, Time_ms wait);
+#endif
 	virtual ~Lock();
 
 	bool lock(TickType_t wait = portMAX_DELAY);
+#if FREERTOSCPP_USE_CHRONO
+	bool lock(Time_ms ms) { return lock(ms2ticks(ms)); }
+#endif
 	void unlock();
+    /**
+     * Do we have the lock?
+     * @return True if we have the lock.
+     */
 	bool locked() const { return lockCnt > 0; }
 private:
-	Lockable& lockable;
-	int		lockCnt;
+	Lockable& lockable; ///< The Lockage object we are connected to
+	int		lockCnt;    ///< The number of locks we hold on lockable.
 
 #if __cplusplus < 201101L
-    Lock(Lock const&);      ///< We are not copyable.
-    void operator =(Lock const&);  ///< We are not assignable.
+    Lock(Lock const&);                      ///< We are not copyable.
+    void operator =(Lock const&);           ///< We are not assignable.
 #else
-    Lock(Lock const&) = delete;      ///< We are not copyable.
+    Lock(Lock const&) = delete;             ///< We are not copyable.
     void operator =(Lock const&) = delete;  ///< We are not assignable.
 #endif // __cplusplus
 };
 
-#endif /* FREERTOS_FREERTOSPP_LOCK_H_ */
+#if FREERTOSCPP_USE_NAMESPACE
+}   // namespace FreeRTOScpp
+#endif
+#endif /* FREERTOSPP_LOCK_H_ */
