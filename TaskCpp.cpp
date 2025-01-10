@@ -46,7 +46,7 @@ extern "C" {
 */
 void taskcpp_task_thunk(void* parm) {
     TaskClassBase *myClass = static_cast<TaskClassBase*>(parm);
-    if (myClass->wait_at_start) TaskBase::take();
+    TaskBase::take();
     myClass->task();
 #if INCLUDE_vTaskDelete
     vTaskDelete(nullptr);

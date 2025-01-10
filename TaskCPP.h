@@ -117,7 +117,7 @@ constexpr TaskPriority operator-(TaskPriority p, int offset) {
  *
  * If the TaskBase object is destroyed, the FreeRTOS Task will be deleted (if deletion has been enabled)
  * @ingroup FreeRTOSCpp
- * @todo Fully implemwent task manipulation functions
+ * @todo Fully implement task manipulation functions
  *
  * @ingroup FreeRTOSCpp
  */
@@ -515,7 +515,6 @@ public:
    */
   virtual void task() = 0;
 
-			bool	wait_at_start = false;
 };
 
 /**
